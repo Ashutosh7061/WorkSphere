@@ -12,3 +12,6 @@ server.servlet.context-path = /api/v1
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+
+jwt.secret=YOUR_LONG_RANDOM_SECRET_KEY
+jwt.expiration=3600000
