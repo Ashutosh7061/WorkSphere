@@ -41,9 +41,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                boolean valid = jwtService.isTokenValid(token, userDetails);
 
-                if (jwtService.isTokenValid(token, userDetails)) {
 
+                if (valid) {
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
                                     userDetails,
@@ -55,17 +56,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new WebAuthenticationDetailsSource()
                                     .buildDetails(request)
                     );
-
                     SecurityContextHolder.getContext()
                             .setAuthentication(authentication);
+
+
                 }
             }
 
         } catch (Exception exception) {
-            // Invalid JWT → request remains unauthenticated
-            System.out.println("JWT ERROR: " + exception.getMessage());
+            System.out.println(
+                    "JWT ERROR: " + exception.getMessage()
+            );
         }
-
         filterChain.doFilter(request, response);
     }
 }

@@ -17,9 +17,14 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+
+import org.springframework.security.web.access.AccessDeniedHandler;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -39,17 +44,9 @@ public class SecurityConfig {
                                 SessionCreationPolicy.STATELESS
                         )
                 )
-                .exceptionHandling(exception ->
-                        exception.authenticationEntryPoint(
-                                (request, response, authException) ->
-                                        response.sendError(
-                                                HttpStatus.UNAUTHORIZED.value(),
-                                                "Authentication failed"
-                                        )
-                        )
-                )
+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/login").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
