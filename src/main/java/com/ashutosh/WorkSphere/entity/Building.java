@@ -1,5 +1,6 @@
 package com.ashutosh.WorkSphere.entity;
 
+import com.ashutosh.WorkSphere.enums.BuildingStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,8 +10,12 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "buildings")
-public class Building {
+@Table(
+        name = "buildings",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"name", "campus_id"})
+        }
+)public class Building {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,7 +26,12 @@ public class Building {
 
     private String address;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private BuildingStatus status = BuildingStatus.ACTIVE;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
+    @JoinColumn(name = "campus_id", nullable = false)
+    private Campus campus;
 }

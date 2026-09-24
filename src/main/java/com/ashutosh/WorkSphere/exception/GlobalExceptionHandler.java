@@ -65,8 +65,20 @@ public class GlobalExceptionHandler {
                 "messages", errors
         );
 
-        return ResponseEntity
-                .badRequest()
-                .body(response);
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(InactiveResourceException.class)
+    public ResponseEntity<?> handleInactiveResource(
+            InactiveResourceException exception) {
+
+        Map<String, Object> response = Map.of(
+                "timestamp", LocalDateTime.now(),
+                "status", HttpStatus.CONFLICT.value(),
+                "error", "Conflict",
+                "message", exception.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 }
