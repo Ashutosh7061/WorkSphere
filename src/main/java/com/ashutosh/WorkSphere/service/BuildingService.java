@@ -94,8 +94,18 @@ public class BuildingService {
         return mapToResponse(updatedBuilding);
     }
 
-    private BuildingResponse mapToResponse(Building building) {
+    public List<BuildingResponse> getBuildingsByCampusId(Long campusId) {
 
+        campusRepository.findById(campusId)
+                .orElseThrow(() -> new ResourceNotFoundException("Campus not found with id: " + campusId));
+
+        return buildingRepository.findAllByCampusId(campusId)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    private BuildingResponse mapToResponse(Building building) {
         return BuildingResponse.builder()
                 .id(building.getId())
                 .name(building.getName())

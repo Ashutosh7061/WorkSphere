@@ -44,14 +44,18 @@ public class BuildingController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<BuildingResponse> updateBuilding(@PathVariable Long id, @Valid @RequestBody BuildingUpdateRequest request) {
-
         return ResponseEntity.ok(buildingService.updateBuilding(id, request));
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<BuildingResponse> updateBuildingStatus(@PathVariable Long id, @RequestParam BuildingStatus status) {
-
         return ResponseEntity.ok(buildingService.updateBuildingStatus(id, status));
+    }
+
+    @GetMapping("/campus/{campusId}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<List<BuildingResponse>> getBuildingsByCampusId(@PathVariable Long campusId) {
+        return ResponseEntity.ok(buildingService.getBuildingsByCampusId(campusId));
     }
 }
