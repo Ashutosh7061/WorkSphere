@@ -37,11 +37,22 @@ public class BuildingService {
             throw new DuplicateResourceException("Building already exists with name: " + request.getName());
         }
 
+        String code = request.getCode().trim().toUpperCase();
+
+        if (buildingRepository.existsByCampusIdAndCode(
+                request.getCampusId(), code)) {
+
+            throw new DuplicateResourceException(
+                    "Building already exists with code: " + code
+            );
+        }
+
         Building building = Building.builder()
                 .name(request.getName())
                 .address(request.getAddress())
                 .campus(campus)
                 .status(BuildingStatus.ACTIVE)
+                .code(code)
                 .build();
 
         Building savedBuilding = buildingRepository.save(building);
@@ -109,6 +120,7 @@ public class BuildingService {
         return BuildingResponse.builder()
                 .id(building.getId())
                 .name(building.getName())
+                .code(building.getCode())
                 .address(building.getAddress())
                 .status(building.getStatus())
                 .campusId(building.getCampus().getId())

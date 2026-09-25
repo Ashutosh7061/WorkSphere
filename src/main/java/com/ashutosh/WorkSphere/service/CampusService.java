@@ -30,6 +30,14 @@ public class CampusService {
             throw new DuplicateResourceException("Campus already exists with name: " + request.getName());
         }
 
+        String code = request.getCode().trim().toUpperCase();
+
+        if (campusRepository.existsByCode(code)) {
+            throw new DuplicateResourceException(
+                    "Campus already exists with code: " + code
+            );
+        }
+
         Campus campus = Campus.builder()
                 .name(request.getName())
                 .address(request.getAddress())
@@ -37,6 +45,7 @@ public class CampusService {
                 .state(request.getState())
                 .postalCode(request.getPostalCode())
                 .company(company)
+                .code(code)
                 .build();
 
         Campus savedCampus = campusRepository.save(campus);
@@ -97,6 +106,7 @@ public class CampusService {
         return CampusResponse.builder()
                 .id(campus.getId())
                 .name(campus.getName())
+                .code(campus.getCode())
                 .status(campus.getStatus())
                 .address(campus.getAddress())
                 .city(campus.getCity())

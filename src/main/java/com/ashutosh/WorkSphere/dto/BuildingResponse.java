@@ -12,6 +12,7 @@ public class BuildingResponse {
 
     private Long id;
     private String name;
+    private String code;
     private String address;
     private BuildingStatus status;
     private Long campusId;

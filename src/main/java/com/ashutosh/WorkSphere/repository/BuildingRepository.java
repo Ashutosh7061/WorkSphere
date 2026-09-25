@@ -14,4 +14,6 @@ public interface BuildingRepository extends JpaRepository<Building, Long> {
 
     List<Building> findAllByCampusId(Long campusId);
 
+    boolean existsByCampusIdAndCode(Long campusId, String code);
+
 }
