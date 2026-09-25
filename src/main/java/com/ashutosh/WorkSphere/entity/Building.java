@@ -13,9 +13,12 @@ import lombok.*;
 @Table(
         name = "buildings",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"name", "campus_id"})
+                @UniqueConstraint(columnNames = {"name", "campus_id"}),
+                @UniqueConstraint(columnNames = {"code", "campus_id"})
         }
-)public class Building {
+)
+
+public class Building {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,6 +26,9 @@ import lombok.*;
 
     @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false, length = 10)
+    private String code;
 
     private String address;
 

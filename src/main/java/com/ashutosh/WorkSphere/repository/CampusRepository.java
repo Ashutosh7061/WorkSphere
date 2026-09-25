@@ -12,5 +12,5 @@ public interface CampusRepository extends JpaRepository<Campus, Long> {
 
     Optional<Campus> findByIdAndCompanyId(Long id, Long companyId);
 
-
+    boolean existsByCode(String code);
 }

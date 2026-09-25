@@ -39,6 +39,9 @@ public class Campus {
     @Builder.Default
     private CampusStatus status = CampusStatus.ACTIVE;
 
+    @Column(nullable = false, unique = true, length = 10)
+    private String code;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
