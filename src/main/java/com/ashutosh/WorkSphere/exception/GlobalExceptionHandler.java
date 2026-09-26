@@ -15,8 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<?> handleResourceNotFound(
-            ResourceNotFoundException exception) {
+    public ResponseEntity<?> handleResourceNotFound(ResourceNotFoundException exception) {
 
         Map<String, Object> response = Map.of(
                 "timestamp", LocalDateTime.now(),
@@ -32,8 +31,7 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<?> handleDuplicateResource(
-            DuplicateResourceException exception) {
+    public ResponseEntity<?> handleDuplicateResource(DuplicateResourceException exception) {
 
         Map<String, Object> response = Map.of(
                 "timestamp", LocalDateTime.now(),
@@ -48,8 +46,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidationException(
-            MethodArgumentNotValidException exception) {
+    public ResponseEntity<?> handleValidationException(MethodArgumentNotValidException exception) {
 
         Map<String, String> errors = new HashMap<>();
 
@@ -69,8 +66,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InactiveResourceException.class)
-    public ResponseEntity<?> handleInactiveResource(
-            InactiveResourceException exception) {
+    public ResponseEntity<?> handleInactiveResource(InactiveResourceException exception) {
 
         Map<String, Object> response = Map.of(
                 "timestamp", LocalDateTime.now(),
@@ -80,5 +76,18 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(InvalidRequestArguments.class)
+    public ResponseEntity<?> handleInactiveResource(InvalidRequestArguments exception) {
+
+        Map<String, Object> response = Map.of(
+                "timestamp", LocalDateTime.now(),
+                "status", HttpStatus.BAD_REQUEST.value(),
+                "error", "Bad Request",
+                "message", exception.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }

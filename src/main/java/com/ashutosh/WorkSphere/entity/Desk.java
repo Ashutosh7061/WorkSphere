@@ -15,20 +15,21 @@ import lombok.*;
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"floor_id", "desk_code"})
         })
+
 public class Desk {
 
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-        @Column(name = "desk_code",nullable = false)
-        private String deskCode;
+    @Column(name = "desk_code", nullable = false, unique = true)
+    private String deskCode;
 
-        @Enumerated(EnumType.STRING)
-        @Column(nullable = false)
-        private DeskStatus status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private DeskStatus status;
 
-        @ManyToOne(fetch = FetchType.LAZY,optional = false)
-        @JoinColumn(name = "floor_id",nullable = false)
-        private Floor floor;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "floor_id", nullable = false)
+    private Floor floor;
 }
