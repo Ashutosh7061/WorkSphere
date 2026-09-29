@@ -27,7 +27,7 @@ public class RoomBooking {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "meeting_room_id", nullable = false)
-    private MeetingRoom meetingRoom;
+    private Room room;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "employee_id", nullable = false)
