@@ -16,4 +16,13 @@ public interface BuildingRepository extends JpaRepository<Building, Long> {
 
     boolean existsByCampusIdAndCode(Long campusId, String code);
 
+    // Find a specific building using both codes
+    Optional<Building> findByCodeAndCampus_Code(String buildingCode, String campusCode);
+
+    // Check duplicate building name during updates
+    boolean existsByNameAndCampus_Code(String name, String campusCode);
+
+    // Get all buildings belonging to a campus code
+    List<Building> findAllByCampus_Code(String campusCode);
+
 }

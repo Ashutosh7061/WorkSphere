@@ -20,5 +20,5 @@ public class BuildingCreateRequest {
 
     private String address;
 
-    private Long campusId;
+//    private Long campusId;
 }

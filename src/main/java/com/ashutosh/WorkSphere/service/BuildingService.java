@@ -24,27 +24,23 @@ public class BuildingService {
     private final BuildingRepository buildingRepository;
     private final CampusRepository campusRepository;
 
-    public BuildingResponse createBuilding(BuildingCreateRequest request) {
+    public BuildingResponse createBuilding(String campusCode, BuildingCreateRequest request) {
 
-        Campus campus = campusRepository.findById(request.getCampusId())
-                .orElseThrow(() -> new ResourceNotFoundException("Campus not found with id: " + request.getCampusId()));
+        Campus campus = campusRepository.findByCode(campusCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Campus not found with code: " + campusCode));
 
         if (campus.getStatus() == CampusStatus.INACTIVE) {
             throw new InactiveResourceException("Cannot create building under an inactive campus");
         }
 
-        if (buildingRepository.existsByNameAndCampusId(request.getName(), request.getCampusId())) {
+        if (buildingRepository.existsByNameAndCampusId(request.getName(), campus.getId())) {
             throw new DuplicateResourceException("Building already exists with name: " + request.getName());
         }
 
         String code = request.getCode().trim().toUpperCase();
 
-        if (buildingRepository.existsByCampusIdAndCode(
-                request.getCampusId(), code)) {
-
-            throw new DuplicateResourceException(
-                    "Building already exists with code: " + code
-            );
+        if (buildingRepository.existsByCampusIdAndCode(campus.getId(), code)) {
+            throw new DuplicateResourceException("Building already exists with code: " + code);
         }
 
         Building building = Building.builder()
@@ -68,20 +64,20 @@ public class BuildingService {
                 .toList();
     }
 
-    public BuildingResponse getBuildingById(Long id) {
-        Building building = buildingRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Building not found with id: " + id));
+    public BuildingResponse getBuildingByCode(String campusCode, String buildingCode) {
+        Building building = buildingRepository.findByCodeAndCampus_Code(buildingCode, campusCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Building not found with code: " + buildingCode + " in campus: " + campusCode));
 
         return mapToResponse(building);
     }
 
-    public BuildingResponse updateBuilding(Long id, BuildingUpdateRequest request) {
+    public BuildingResponse updateBuilding(String campusCode, String buildingCode, BuildingUpdateRequest request) {
 
-        Building building = buildingRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Building not found with id: " + id));
+        Building building = buildingRepository.findByCodeAndCampus_Code(buildingCode, campusCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Building not found with code: " + buildingCode + " in campus: " + campusCode));
 
         if (!building.getName().equalsIgnoreCase(request.getName()) &&
-                buildingRepository.existsByNameAndCampusId(request.getName(), building.getCampus().getId())) {
+                buildingRepository.existsByNameAndCampus_Code(request.getName(), campusCode)) {
 
             throw new DuplicateResourceException("Building already exists with name: " + request.getName());
         }
@@ -94,10 +90,10 @@ public class BuildingService {
 
     }
 
-    public BuildingResponse updateBuildingStatus(Long id, BuildingStatus status) {
+    public BuildingResponse updateBuildingStatus(String campusCode, String buildingCode, BuildingStatus status) {
 
-        Building building = buildingRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Building not found with id: " + id));
+        Building building = buildingRepository.findByCodeAndCampus_Code(buildingCode,campusCode)
+                .orElseThrow(() -> new ResourceNotFoundException( "Building not found with code: " + buildingCode + " in campus: " + campusCode));
 
         building.setStatus(status);
         Building updatedBuilding = buildingRepository.save(building);
@@ -111,6 +107,17 @@ public class BuildingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Campus not found with id: " + campusId));
 
         return buildingRepository.findAllByCampusId(campusId)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    public List<BuildingResponse> getBuildingsByCampusCode(String campusCode) {
+
+        Campus campus = campusRepository.findByCode(campusCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Campus not found with code: " + campusCode));
+
+        return buildingRepository.findAllByCampusId(campus.getId())
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
