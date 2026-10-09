@@ -2,6 +2,7 @@ package com.ashutosh.WorkSphere.controller;
 
 import com.ashutosh.WorkSphere.dto.CampusCreateRequest;
 import com.ashutosh.WorkSphere.dto.CampusResponse;
+import com.ashutosh.WorkSphere.dto.CampusUpdateRequest;
 import com.ashutosh.WorkSphere.enums.CampusStatus;
 import com.ashutosh.WorkSphere.service.CampusService;
 import jakarta.validation.Valid;
@@ -37,23 +38,23 @@ public class CampusController {
         return ResponseEntity.ok(campusService.getAllCampuses());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{campusCode}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<CampusResponse> getCampusById(@PathVariable Long id) {
-        return ResponseEntity.ok(campusService.getCampusById(id));
+    public ResponseEntity<CampusResponse> getCampusByCode(@PathVariable String campusCode) {
+        return ResponseEntity.ok(campusService.getCampusByCode(campusCode));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{campusCode}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<CampusResponse> updateCampus(@PathVariable Long id, @Valid @RequestBody CampusCreateRequest request) {
+    public ResponseEntity<CampusResponse> updateCampus(@PathVariable String campusCode, @Valid @RequestBody CampusUpdateRequest request) {
 
-        return ResponseEntity.ok(campusService.updateCampus(id, request));
+        return ResponseEntity.ok(campusService.updateCampus(campusCode, request));
     }
 
-    @PatchMapping("/{id}/status")
+    @PatchMapping("/{campusCode}/status")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<CampusResponse> updateCampusStatus(@PathVariable Long id, @RequestParam CampusStatus status) {
+    public ResponseEntity<CampusResponse> updateCampusStatus(@PathVariable String campusCode, @RequestParam CampusStatus status) {
 
-        return ResponseEntity.ok(campusService.updateCampusStatus(id, status));
+        return ResponseEntity.ok(campusService.updateCampusStatus(campusCode, status));
     }
 }

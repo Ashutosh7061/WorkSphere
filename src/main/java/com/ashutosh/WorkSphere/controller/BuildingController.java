@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/buildings")
+@RequestMapping("/campuses/{campusCode}/buildings")
 @RequiredArgsConstructor
 public class BuildingController {
 
@@ -23,39 +23,34 @@ public class BuildingController {
 
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<BuildingResponse> createBuilding(@Valid @RequestBody BuildingCreateRequest request) {
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(buildingService.createBuilding(request));
+    public ResponseEntity<BuildingResponse> createBuilding(@PathVariable String campusCode, @Valid @RequestBody BuildingCreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(buildingService.createBuilding(campusCode,request));
     }
 
     @GetMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<List<BuildingResponse>> getAllBuildings() {
-        return ResponseEntity.ok(buildingService.getAllBuildings());
+    public ResponseEntity<List<BuildingResponse>> getAllBuildingsByCompanyCode(@PathVariable String campusCode) {
+        return ResponseEntity.ok(buildingService.getBuildingsByCampusCode(campusCode));
     }
 
 
-    @GetMapping("/{id}")
+    @GetMapping("/{buildingCode}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<BuildingResponse> getBuildingById(@PathVariable Long id) {
-        return ResponseEntity.ok(buildingService.getBuildingById(id));
+    public ResponseEntity<BuildingResponse> getBuildingByCode(@PathVariable String campusCode, @PathVariable String buildingCode ){
+        return ResponseEntity.ok(buildingService.getBuildingByCode(campusCode,buildingCode));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{buildingCode}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<BuildingResponse> updateBuilding(@PathVariable Long id, @Valid @RequestBody BuildingUpdateRequest request) {
-        return ResponseEntity.ok(buildingService.updateBuilding(id, request));
+    public ResponseEntity<BuildingResponse> updateBuilding(@PathVariable String campusCode,
+                            @PathVariable  String buildingCode, @Valid @RequestBody BuildingUpdateRequest request) {
+        return ResponseEntity.ok(buildingService.updateBuilding(campusCode,buildingCode, request));
     }
 
-    @PatchMapping("/{id}/status")
+    @PatchMapping("/{buildingCode}/status")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<BuildingResponse> updateBuildingStatus(@PathVariable Long id, @RequestParam BuildingStatus status) {
-        return ResponseEntity.ok(buildingService.updateBuildingStatus(id, status));
+    public ResponseEntity<BuildingResponse> updateBuildingStatus(@PathVariable String campusCode, @PathVariable String buildingCode, @RequestParam BuildingStatus status) {
+        return ResponseEntity.ok(buildingService.updateBuildingStatus(campusCode,buildingCode, status));
     }
 
-    @GetMapping("/campus/{campusId}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<List<BuildingResponse>> getBuildingsByCampusId(@PathVariable Long campusId) {
-        return ResponseEntity.ok(buildingService.getBuildingsByCampusId(campusId));
-    }
 }
