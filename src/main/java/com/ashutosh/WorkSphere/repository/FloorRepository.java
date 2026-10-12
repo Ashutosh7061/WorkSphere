@@ -9,9 +9,12 @@ import java.util.Optional;
 public interface FloorRepository extends JpaRepository<Floor, Long> {
 
     Optional<Floor> findByBuildingIdAndFloorNumber(Long buildingId, Integer floorNumber);
-
-    boolean existsByBuildingIdAndFloorNumber(Long buildingId, Integer floorNumber);
+    List<Floor> findAllByBuilding_Campus_Code(String campusCode);
 
     List<Floor> findAllByBuildingId(Long buildingId);
 
-}
+    Optional<Floor> findByBuilding_CodeAndBuilding_Campus_CodeAndFloorNumber(String buildingCode, String campusCode, Integer floorNumber);
+
+    boolean existsByBuilding_CodeAndBuilding_Campus_CodeAndFloorNumber(String buildingCode, String campusCode, Integer floorNumber);
+
+    List<Floor> findAllByBuilding_CodeAndBuilding_Campus_Code(String buildingCode, String campusCode);}
