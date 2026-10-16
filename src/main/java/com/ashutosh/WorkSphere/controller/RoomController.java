@@ -29,15 +29,15 @@ public class RoomController {
 
     @GetMapping("/{roomCode}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<RoomResponse> getRoomByCode(@PathVariable String roomCode){
+    public ResponseEntity<RoomResponse> getRoomByCode(@PathVariable String roomCode) {
         return ResponseEntity.ok(roomService.getRoomByCode(roomCode));
     }
 
-    @GetMapping("/building/{buildingId}/floor/{floorNumber}")
+    @GetMapping("/campuses/{campusCode}/buildings/{buildingCode}/floors/{floorNumber}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<List<RoomResponse>> getRoomsByFloor(@PathVariable Long buildingId, @PathVariable Integer floorNumber) {
+    public ResponseEntity<List<RoomResponse>> getRoomsByFloor(@PathVariable String campusCode, @PathVariable String buildingCode, @PathVariable Integer floorNumber) {
 
-        return ResponseEntity.ok(roomService.getRoomsByFloor(buildingId, floorNumber));
+        return ResponseEntity.ok(roomService.getRoomsByFloor(campusCode, buildingCode, floorNumber));
     }
 
     @PatchMapping("/{roomCode}")

@@ -83,9 +83,9 @@ public class RoomService {
         return mapToResponse(room);
     }
 
-    public List<RoomResponse> getRoomsByFloor(Long buildingId, Integer floorNumber) {
+    public List<RoomResponse> getRoomsByFloor(String campusCode, String buildingCode, Integer floorNumber) {
 
-        List<Room> rooms = roomRepository.findByFloorBuildingIdAndFloorFloorNumber(buildingId, floorNumber);
+        List<Room> rooms = roomRepository.findByFloorBuildingCodeAndFloorBuildingCampusCodeAndFloorFloorNumber(buildingCode,campusCode, floorNumber);
 
         return rooms.stream()
                 .map(this::mapToResponse)

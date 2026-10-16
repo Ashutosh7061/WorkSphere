@@ -12,7 +12,9 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 
     long countByFloorId(Long floorId);
 
-    List<Room> findByFloorBuildingIdAndFloorFloorNumber(Long buildingId, Integer floorNumber);
+    List<Room> findByFloorBuildingCodeAndFloorBuildingCampusCodeAndFloorFloorNumber(String buildingCode, String campusCode, Integer floorNumber);
 
+    List<Room> findByFloor_Building_CodeAndFloor_Building_Campus_CodeAndFloor_FloorNumber(String buildingCode, String campusCode, Integer floorNumber);
 
+    Optional<Room> findByRoomCodeAndFloor_FloorNumberAndFloor_Building_CodeAndFloor_Building_Campus_Code(String roomCode, Integer floorNumber, String buildingCode, String campusCode);
 }
