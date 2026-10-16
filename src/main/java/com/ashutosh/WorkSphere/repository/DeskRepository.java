@@ -16,5 +16,6 @@ public interface DeskRepository extends JpaRepository<Desk, Long> {
 
     List<Desk> findByDeskCodeIn(List<String> deskCodes);
 
+    List<Desk> findByFloorBuildingCodeAndFloorBuildingCampusCodeAndFloorFloorNumber(String buildingCode, String campusCode, Integer floorNumber);
 
 }

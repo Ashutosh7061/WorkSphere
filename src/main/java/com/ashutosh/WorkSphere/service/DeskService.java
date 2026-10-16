@@ -34,9 +34,10 @@ public class DeskService {
     private final DeskRepository deskRepository;
 
     @Transactional
-    public DeskBulkCreateResponse createDesks(Long buildingId, DeskCreateRequest request) {
+    public DeskBulkCreateResponse createDesks(String campusCode,String buildingCode, DeskCreateRequest request) {
 
-        Building building = buildingRepository.findById(buildingId).orElseThrow(() -> new ResourceNotFoundException("Building not found with id: " + buildingId));
+        Building building = buildingRepository.findByCodeAndCampus_Code(buildingCode,campusCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Building " + buildingCode + " not found in campus " + campusCode));
 
         Campus campus = building.getCampus();
 
@@ -48,7 +49,8 @@ public class DeskService {
             throw new InactiveResourceException("Cannot create desks under an inactive building");
         }
 
-        Floor floor = floorRepository.findByBuildingIdAndFloorNumber(buildingId, request.getFloorNumber()).orElseThrow(() -> new ResourceNotFoundException("Floor not found with number: " + request.getFloorNumber() + " in building: " + buildingId));
+        Floor floor = floorRepository.findByBuilding_CodeAndBuilding_Campus_CodeAndFloorNumber(buildingCode,campusCode, request.getFloorNumber())
+                .orElseThrow(() -> new ResourceNotFoundException("Floor not found with number: " + request.getFloorNumber() + " in building: " + buildingCode));
 
         if (floor.getStatus() == FloorStatus.INACTIVE) {
             throw new InactiveResourceException("Cannot create desks under an inactive floor");
@@ -56,14 +58,18 @@ public class DeskService {
 
         List<Desk> desks = new ArrayList<>();
 
-        int startNumber = deskRepository.countByFloorId(floor.getId()) + 1;
+        int startNumber = (int)deskRepository.countByFloorId(floor.getId()) + 1;
 
         for (int i = 0; i < request.getQuantity(); i++) {
             int deskNumber = startNumber + i;
 
             String deskCode = generateDeskCode(campus, building, floor, deskNumber);
 
-            Desk desk = Desk.builder().deskCode(deskCode).status(DeskStatus.AVAILABLE).floor(floor).build();
+            Desk desk = Desk.builder()
+                    .deskCode(deskCode)
+                    .status(DeskStatus.AVAILABLE)
+                    .floor(floor)
+                    .build();
 
             desks.add(desk);
         }
@@ -86,16 +92,14 @@ public class DeskService {
         return campus.getCode() + "-" + building.getCode() + "-" + floorCode + "-D" + String.format("%02d", deskNumber);
     }
 
-    public List<DeskResponse> getDesksByBuildingAndFloor(Long buildingId, Integer floorNumber) {
+    public List<DeskResponse> getDesksByBuildingAndFloor(String campusCode, String buildingCode, Integer floorNumber) {
 
-        Building building = buildingRepository.findById(buildingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Building not found with id: " + buildingId));
-
-        Floor floor = floorRepository.findByBuildingIdAndFloorNumber(buildingId, floorNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Floor not found with number: " + floorNumber + " in building: " + buildingId));
+        Floor floor = floorRepository
+                .findByBuilding_CodeAndBuilding_Campus_CodeAndFloorNumber(buildingCode, campusCode, floorNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Floor not found: " + floorNumber + " in building: " + buildingCode + " on campus: " + campusCode));
 
         return deskRepository
-                .findByFloorBuildingIdAndFloorFloorNumber(buildingId, floorNumber)
+                .findByFloorBuildingCodeAndFloorBuildingCampusCodeAndFloorFloorNumber(buildingCode, campusCode, floorNumber)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();

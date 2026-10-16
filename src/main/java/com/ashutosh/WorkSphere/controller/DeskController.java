@@ -21,17 +21,18 @@ public class DeskController {
 
     private final DeskService deskService;
 
-    @PostMapping("/buildings/{buildingId}")
+    @PostMapping("/campuses/{campusCode}/buildings/{buildingCode}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<DeskBulkCreateResponse> createDesks(@PathVariable Long buildingId, @Valid @RequestBody DeskCreateRequest request) {
+    public ResponseEntity<DeskBulkCreateResponse> createDesks(@PathVariable String campusCode, @PathVariable String buildingCode, @Valid @RequestBody DeskCreateRequest request) {
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(deskService.createDesks(buildingId, request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(deskService.createDesks(campusCode,buildingCode, request));
     }
 
-    @GetMapping("/buildings/{buildingId}")
+    @GetMapping("/campuses/{campusCode}/buildings/{buildingCode}/floors/{floorNumber}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<List<DeskResponse>> getDesksByBuildingAndFloor(@PathVariable Long buildingId, @RequestParam Integer floorNumber) {
-        return ResponseEntity.ok(deskService.getDesksByBuildingAndFloor(buildingId, floorNumber));
+    public ResponseEntity<List<DeskResponse>> getDesksByBuildingAndFloor(@PathVariable String campusCode, @PathVariable String buildingCode, @PathVariable Integer floorNumber) {
+
+        return ResponseEntity.ok(deskService.getDesksByBuildingAndFloor(campusCode, buildingCode, floorNumber));
     }
 
     @GetMapping("/code/{deskCode}")
