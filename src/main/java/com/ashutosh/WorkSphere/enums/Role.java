@@ -6,5 +6,7 @@ public enum Role {
     MANAGER,
     IT_ADMIN,
     FACILITY_ADMIN,
-    SUPER_ADMIN
+    SUPER_ADMIN,
+    CAMPUS_ADMIN,
+    BUILDING_ADMIN
 }

@@ -40,6 +40,30 @@ public class JwtService {
                 .compact();
     }
 
+    public String generatePasswordChangeToken(UserDetails userDetails) {
+        Date now = new Date();
+        Date expirationDate = new Date(now.getTime() + jwtExpiration);
+
+        return Jwts.builder()
+                .subject(userDetails.getUsername())
+                .claim("tokenType", "PASSWORD_CHANGE")
+                .issuedAt(now)
+                .expiration(expirationDate)
+                .signWith(secretKey)
+                .compact();
+    }
+
+    public boolean isPasswordChangeToken(String token) {
+        String tokenType = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("tokenType", String.class);
+
+        return "PASSWORD_CHANGE".equals(tokenType);
+    }
+
     public String extractUsername(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)

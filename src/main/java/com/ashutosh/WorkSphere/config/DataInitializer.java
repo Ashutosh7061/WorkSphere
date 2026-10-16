@@ -28,6 +28,7 @@ public class DataInitializer implements CommandLineRunner {
                     .password(passwordEncoder.encode("SuperAdmin@123"))
                     .role(Role.SUPER_ADMIN)
                     .accountStatus(AccountStatus.ACTIVE)
+                    .passwordChangeRequired(false)
                     .build();
 
             userRepository.save(superAdmin);

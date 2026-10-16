@@ -32,6 +32,18 @@ public class User {
     @Column(nullable = false)
     private AccountStatus accountStatus;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "campus_id")
+    private Campus campus;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "building_id")
+    private Building building;
+
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Employee employee;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean passwordChangeRequired = false;
 }

@@ -63,7 +63,6 @@ public class AuditoriumController {
     @GetMapping("/campuses/{campusCode}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<AuditoriumResponse>> getAllAuditoriumByCampus(@PathVariable String campusCode){
-        System.out.println("Campus auditorium endpoint reached contoller");
         List<AuditoriumResponse> responses =auditoriumService.getAllAuditoriumByCampusCode(campusCode);
 
         return ResponseEntity.ok(responses);

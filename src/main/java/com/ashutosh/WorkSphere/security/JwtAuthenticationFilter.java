@@ -38,28 +38,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String username = jwtService.extractUsername(token);
 
+            boolean passwordChangeToken = jwtService.isPasswordChangeToken(token);
+
+            // This will restrict new account to perform task rather than password change first.
+            if (passwordChangeToken &&
+                    (!"POST".equalsIgnoreCase(request.getMethod()) || !request.getServletPath().endsWith("/auth/change-password"))) {
+
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Password change required before accessing other endpoints");
+                return;
+            }
+
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 boolean valid = jwtService.isTokenValid(token, userDetails);
 
-
                 if (valid) {
+                    CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
+
+                    boolean passwordChangeRequired = customUserDetails.getUser().isPasswordChangeRequired();
+                    boolean passwordChangeToken1 = jwtService.isPasswordChangeToken(token);
+                    boolean isPasswordChangeEndpoint = "POST".equalsIgnoreCase(request.getMethod()) && request.getServletPath().endsWith("/auth/change-password");
+
+                    if (passwordChangeRequired) {
+                        if (!passwordChangeToken1 || !isPasswordChangeEndpoint) {
+                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Password change required before accessing other endpoints");
+                            return;
+                        }
+                    } else if (passwordChangeToken1) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Password-change token is no longer valid");
+                        return;
+                    }
+
                     UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
                     authentication.setDetails(
-                            new WebAuthenticationDetailsSource()
-                                    .buildDetails(request)
-                    );
-                    SecurityContextHolder.getContext()
-                            .setAuthentication(authentication);
+                            new WebAuthenticationDetailsSource().buildDetails(request));
 
-
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
 

@@ -148,7 +148,6 @@ public class AuditoriumService {
 
     public List<AuditoriumResponse> getAllAuditoriumByCampusCode(String campusCode){
 
-        System.out.println("Campus auditorium endpoint reached service");
         return auditoriumRepository.findAllByFloor_Building_Campus_Code(campusCode)
                 .stream()
                 .map(this::mapToResponse)
