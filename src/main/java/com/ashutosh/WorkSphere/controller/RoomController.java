@@ -21,10 +21,10 @@ public class RoomController {
 
     private final RoomService roomService;
 
-    @PostMapping
+    @PostMapping("/campuses/{campusCode}/buildings/{buildingCode}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<RoomResponse> createRoom(@Valid @RequestBody RoomCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(roomService.createRoom(request));
+    public ResponseEntity<RoomResponse> createRoom(@PathVariable String campusCode, @PathVariable String buildingCode, @Valid @RequestBody RoomCreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(roomService.createRoom(campusCode, buildingCode,request));
     }
 
     @GetMapping("/{roomCode}")

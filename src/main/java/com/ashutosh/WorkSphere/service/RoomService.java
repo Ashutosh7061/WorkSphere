@@ -32,10 +32,10 @@ public class RoomService {
     private final FloorRepository floorRepository;
 
     @Transactional
-    public RoomResponse createRoom(RoomCreateRequest request) {
+    public RoomResponse createRoom(String campusCode, String buildingCode, RoomCreateRequest request) {
 
-        Floor floor = floorRepository.findByBuildingIdAndFloorNumber(request.getBuildingId(), request.getFloorNumber())
-                .orElseThrow(() -> new ResourceNotFoundException("Floor " + request.getFloorNumber() + " not found in building with id: " + request.getBuildingId()));
+        Floor floor = floorRepository.findByBuilding_CodeAndBuilding_Campus_CodeAndFloorNumber(buildingCode,campusCode, request.getFloorNumber())
+                .orElseThrow(() -> new ResourceNotFoundException("Floor " + request.getFloorNumber() + " not found in building: " + buildingCode + " on campus: " + campusCode));
 
         Campus campus = floor.getBuilding().getCampus();
         if(campus.getStatus() == CampusStatus.INACTIVE){

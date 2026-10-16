@@ -26,6 +26,5 @@ public class RoomCreateRequest {
     @NotNull(message = "Floor number is required")
     private Integer floorNumber;
 
-    @NotNull(message = "Building ID is required")
-    private Long buildingId;
+
 }
