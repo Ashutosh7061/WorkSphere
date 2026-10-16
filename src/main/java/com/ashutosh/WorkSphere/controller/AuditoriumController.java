@@ -21,11 +21,11 @@ public class AuditoriumController {
 
     private final AuditoriumService auditoriumService;
 
-    @PostMapping
+    @PostMapping("/campuses/{campusCode}/buildings/{buildingCode}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<AuditoriumResponse> createAuditorium(@Valid @RequestBody AuditoriumCreateRequest request) {
+    public ResponseEntity<AuditoriumResponse> createAuditorium(@PathVariable String campusCode, @PathVariable String buildingCode, @Valid @RequestBody AuditoriumCreateRequest request) {
 
-        AuditoriumResponse response = auditoriumService.createAuditorium(request);
+        AuditoriumResponse response = auditoriumService.createAuditorium(campusCode, buildingCode, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -36,10 +36,10 @@ public class AuditoriumController {
         return ResponseEntity.ok(auditoriumService.getAuditoriumByCode(auditoriumCode));
     }
 
-    @GetMapping("/building/{buildingCode}/floor/{floorNumber}")
+    @GetMapping("/campuses/{campusCode}/buildings/{buildingCode}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<List<AuditoriumResponse>> getAuditoriumsByBuildingCodeAndFloorNumber(@PathVariable String buildingCode, @PathVariable Integer floorNumber) {
-        return ResponseEntity.ok(auditoriumService.getAllAuditoriumByBuildingCodeAndFloorNumber(buildingCode, floorNumber));
+    public ResponseEntity<List<AuditoriumResponse>> getAuditoriumsByBuildingCode(@PathVariable String campusCode,@PathVariable String buildingCode) {
+        return ResponseEntity.ok(auditoriumService.getAllAuditoriumByBuildingCodeAndFloorNumber(campusCode,buildingCode));
     }
 
     @PutMapping("/{auditoriumCode}")
@@ -58,5 +58,14 @@ public class AuditoriumController {
         AuditoriumResponse response = auditoriumService.updateAuditoriumStatus(auditoriumCode, request);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/campuses/{campusCode}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<List<AuditoriumResponse>> getAllAuditoriumByCampus(@PathVariable String campusCode){
+        System.out.println("Campus auditorium endpoint reached contoller");
+        List<AuditoriumResponse> responses =auditoriumService.getAllAuditoriumByCampusCode(campusCode);
+
+        return ResponseEntity.ok(responses);
     }
 }

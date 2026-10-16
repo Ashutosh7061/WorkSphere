@@ -33,13 +33,13 @@ public class AuditoriumService {
     private final FloorRepository floorRepository;
 
     @Transactional
-    public AuditoriumResponse createAuditorium(AuditoriumCreateRequest request) {
+    public AuditoriumResponse createAuditorium(String campusCode, String buildingCode, AuditoriumCreateRequest request) {
 
-        Building building = buildingRepository.findById(request.getBuildingId())
-                .orElseThrow(() -> new ResourceNotFoundException("Building not found with id: " + request.getBuildingId()));
+        Building building = buildingRepository.findByCodeAndCampus_Code(buildingCode, campusCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Building " + buildingCode + " not found in campus " + campusCode));
 
-        Floor floor = floorRepository.findByBuildingIdAndFloorNumber(request.getBuildingId(), request.getFloorNumber())
-                .orElseThrow(() -> new ResourceNotFoundException("Floor not found"));
+        Floor floor = floorRepository.findByBuilding_CodeAndBuilding_Campus_CodeAndFloorNumber(buildingCode,campusCode, request.getFloorNumber())
+                .orElseThrow(() -> new ResourceNotFoundException("Floor " + request.getFloorNumber() + " not found in building " + buildingCode + " on campus " + campusCode));
 
         if (floor.getStatus() != FloorStatus.ACTIVE) {
             throw new InactiveResourceException("Cannot create auditorium under an inactive floor");
@@ -55,7 +55,7 @@ public class AuditoriumService {
             throw new InactiveResourceException("Cannot create auditorium under an inactive campus");
         }
 
-        if (auditoriumRepository.existsByAuditoriumNameIgnoreCaseAndFloor_Building_Id(request.getAuditoriumName(),request.getBuildingId())){
+        if (auditoriumRepository.existsByAuditoriumNameIgnoreCaseAndFloor_Building_Id(request.getAuditoriumName(), building.getId())) {
             throw new DuplicateResourceException("Auditorium with this name already exists in the building");
         }
 
@@ -114,9 +114,9 @@ public class AuditoriumService {
         return mapToResponse(auditorium);
     }
 
-    public List<AuditoriumResponse> getAllAuditoriumByBuildingCodeAndFloorNumber( String buildingCode, Integer floorNumber){
+    public List<AuditoriumResponse> getAllAuditoriumByBuildingCodeAndFloorNumber(String campusCode, String buildingCode){
 
-        List<Auditorium> auditorium = auditoriumRepository.findAllByFloor_Building_CodeAndFloor_FloorNumber(buildingCode,floorNumber);
+        List<Auditorium> auditorium = auditoriumRepository.findAllByFloor_Building_CodeAndFloor_Building_Campus_Code( buildingCode,campusCode);
 
         return auditorium.stream()
                 .map(this::mapToResponse)
@@ -144,6 +144,23 @@ public class AuditoriumService {
         Auditorium updatedAuditorium = auditoriumRepository.save(auditorium);
 
         return mapToResponse(updatedAuditorium);
+    }
+
+    public List<AuditoriumResponse> getAllAuditoriumByCampusCode(String campusCode){
+
+        System.out.println("Campus auditorium endpoint reached service");
+        return auditoriumRepository.findAllByFloor_Building_Campus_Code(campusCode)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    public List<AuditoriumResponse> getAllAuditorium(){
+
+        return auditoriumRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
 

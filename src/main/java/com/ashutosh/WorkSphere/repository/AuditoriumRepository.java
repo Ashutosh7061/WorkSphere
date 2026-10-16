@@ -16,8 +16,12 @@ public interface AuditoriumRepository extends JpaRepository<Auditorium, Long> {
 
     List<Auditorium> findAllByFloorId(Long floorId);
 
-    List<Auditorium> findAllByFloor_Building_CodeAndFloor_FloorNumber(String buildingCode, Integer floorNumber);
+    List<Auditorium> findAllByFloor_Building_CodeAndFloor_Building_Campus_Code(String buildingCode, String campusCode);
 
-    boolean existsByAuditoriumNameIgnoreCaseAndFloor_Building_Id(String auditoriumName, Long buildingId
-    );
+    boolean existsByAuditoriumNameIgnoreCaseAndFloor_Building_Id(String auditoriumName, Long buildingId);
+
+    List<Auditorium> findAllByFloor_Building_Campus_Code(String campusCode);
+
+    List<Auditorium> findAll();
+
 }
