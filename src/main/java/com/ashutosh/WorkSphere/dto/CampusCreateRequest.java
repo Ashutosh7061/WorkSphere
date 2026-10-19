@@ -1,5 +1,6 @@
 package com.ashutosh.WorkSphere.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -30,4 +31,8 @@ public class CampusCreateRequest {
             message = "Postal code must contain exactly 6 digits"
     )
     private String postalCode;
+
+    @NotBlank(message = "Campus administrator email is required")
+    @Email(message = "Enter a valid campus administrator email")
+    private String adminEmail;
 }

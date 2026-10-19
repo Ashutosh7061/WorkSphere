@@ -1,6 +1,7 @@
 package com.ashutosh.WorkSphere.controller;
 
 import com.ashutosh.WorkSphere.dto.CampusCreateRequest;
+import com.ashutosh.WorkSphere.dto.CampusCreationResponse;
 import com.ashutosh.WorkSphere.dto.CampusResponse;
 import com.ashutosh.WorkSphere.dto.CampusUpdateRequest;
 import com.ashutosh.WorkSphere.enums.CampusStatus;
@@ -23,9 +24,9 @@ public class CampusController {
 
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<CampusResponse> createCampus(@Valid @RequestBody CampusCreateRequest request) {
+    public ResponseEntity<CampusCreationResponse> createCampus(@Valid @RequestBody CampusCreateRequest request) {
 
-        CampusResponse response = campusService.createCampus(request);
+        CampusCreationResponse response = campusService.createCampus(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -57,4 +58,18 @@ public class CampusController {
 
         return ResponseEntity.ok(campusService.updateCampusStatus(campusCode, status));
     }
+
+
+    @PostMapping("/{campusCode}/admin")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<CampusCreationResponse> provisionCampusAdmin(
+            @PathVariable String campusCode,
+            @RequestParam String adminEmail) {
+
+        CampusCreationResponse response =
+                campusService.provisionCampusAdmin(campusCode, adminEmail);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
 }
