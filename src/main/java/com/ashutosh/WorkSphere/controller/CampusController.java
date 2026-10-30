@@ -58,18 +58,4 @@ public class CampusController {
 
         return ResponseEntity.ok(campusService.updateCampusStatus(campusCode, status));
     }
-
-
-    @PostMapping("/{campusCode}/admin")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<CampusCreationResponse> provisionCampusAdmin(
-            @PathVariable String campusCode,
-            @RequestParam String adminEmail) {
-
-        CampusCreationResponse response =
-                campusService.provisionCampusAdmin(campusCode, adminEmail);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
 }

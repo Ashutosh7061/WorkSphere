@@ -1,5 +1,6 @@
 package com.ashutosh.WorkSphere.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -20,5 +21,5 @@ public class BuildingCreateRequest {
 
     private String address;
 
-//    private Long campusId;
+
 }

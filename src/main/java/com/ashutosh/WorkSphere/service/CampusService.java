@@ -94,45 +94,6 @@ public class CampusService {
     }
 
 
-    @Transactional
-    public CampusCreationResponse provisionCampusAdmin(String campusCode, String adminEmail) {
-
-        String normalizedCampusCode = campusCode.trim().toUpperCase();
-        String normalizedEmail = adminEmail.trim().toLowerCase();
-
-        Campus campus = campusRepository.findByCode(normalizedCampusCode)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Campus not found with code: " + normalizedCampusCode));
-
-        if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new DuplicateResourceException(
-                    "User already exists with email: " + normalizedEmail);
-        }
-
-        // TODO: Before production, enforce one CAMPUS_ADMIN per campus.
-
-        String temporaryPassword = generateTemporaryPassword();
-
-        User campusAdmin = User.builder()
-                .email(normalizedEmail)
-                .password(passwordEncoder.encode(temporaryPassword))
-                .role(Role.CAMPUS_ADMIN)
-                .accountStatus(AccountStatus.ACTIVE)
-                .passwordChangeRequired(true)
-                .campus(campus)
-                .build();
-
-        userRepository.save(campusAdmin);
-
-        return CampusCreationResponse.builder()
-                .campus(mapToResponse(campus))
-                .adminEmail(normalizedEmail)
-                .temporaryPassword(temporaryPassword)
-                .build();
-    }
-
-
-
     public List<CampusResponse> getAllCampuses() {
 
         return campusRepository.findAll()

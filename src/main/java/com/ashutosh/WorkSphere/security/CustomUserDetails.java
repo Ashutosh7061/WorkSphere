@@ -2,6 +2,7 @@ package com.ashutosh.WorkSphere.security;
 
 import com.ashutosh.WorkSphere.entity.User;
 import com.ashutosh.WorkSphere.enums.AccountStatus;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
+@Getter
 @RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
