@@ -22,27 +22,25 @@ public class DeskController {
     private final DeskService deskService;
 
     @PostMapping("/campuses/{campusCode}/buildings/{buildingCode}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN', 'BUILDING_ADMIN')")
     public ResponseEntity<DeskBulkCreateResponse> createDesks(@PathVariable String campusCode, @PathVariable String buildingCode, @Valid @RequestBody DeskCreateRequest request) {
-
         return ResponseEntity.status(HttpStatus.CREATED).body(deskService.createDesks(campusCode,buildingCode, request));
     }
 
     @GetMapping("/campuses/{campusCode}/buildings/{buildingCode}/floors/{floorNumber}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN', 'BUILDING_ADMIN')")
     public ResponseEntity<List<DeskResponse>> getDesksByBuildingAndFloor(@PathVariable String campusCode, @PathVariable String buildingCode, @PathVariable Integer floorNumber) {
-
         return ResponseEntity.ok(deskService.getDesksByBuildingAndFloor(campusCode, buildingCode, floorNumber));
     }
 
     @GetMapping("/code/{deskCode}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN', 'BUILDING_ADMIN')")
     public ResponseEntity<DeskResponse> getDeskByCode(@PathVariable String deskCode) {
         return ResponseEntity.ok(deskService.getDeskByCode(deskCode));
     }
 
     @PatchMapping("/updateStatus")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN', 'BUILDING_ADMIN')")
     public ResponseEntity<String> updateDeskStatus(@Valid @RequestBody DeskStatusUpdateRequest request) {
         return ResponseEntity.ok(deskService.updateDeskStatus(request));
     }
