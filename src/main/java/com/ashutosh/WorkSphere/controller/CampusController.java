@@ -40,22 +40,20 @@ public class CampusController {
     }
 
     @GetMapping("/{campusCode}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN')")
     public ResponseEntity<CampusResponse> getCampusByCode(@PathVariable String campusCode) {
         return ResponseEntity.ok(campusService.getCampusByCode(campusCode));
     }
 
     @PutMapping("/{campusCode}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN')")
     public ResponseEntity<CampusResponse> updateCampus(@PathVariable String campusCode, @Valid @RequestBody CampusUpdateRequest request) {
-
         return ResponseEntity.ok(campusService.updateCampus(campusCode, request));
     }
 
     @PatchMapping("/{campusCode}/status")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN')")
     public ResponseEntity<CampusResponse> updateCampusStatus(@PathVariable String campusCode, @RequestParam CampusStatus status) {
-
         return ResponseEntity.ok(campusService.updateCampusStatus(campusCode, status));
     }
 }

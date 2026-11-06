@@ -15,7 +15,11 @@ import com.ashutosh.WorkSphere.exception.ResourceNotFoundException;
 import com.ashutosh.WorkSphere.repository.CampusRepository;
 import com.ashutosh.WorkSphere.repository.CompanyRepository;
 import com.ashutosh.WorkSphere.repository.UserRepository;
+import com.ashutosh.WorkSphere.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -107,6 +111,8 @@ public class CampusService {
         Campus campus = campusRepository.findByCode(campusCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Campus not found with code: " + campusCode));
 
+        validateCampusAccess(campus);
+
         return mapToResponse(campus);
     }
 
@@ -115,6 +121,8 @@ public class CampusService {
 
         Campus campus = campusRepository.findByCode(campusCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Campus not found with code: " + campusCode));
+
+        validateCampusAccess(campus);
 
         if (!campus.getName().equals(request.getName()) && campusRepository.existsByNameAndCompanyId(request.getName(), campus.getCompany().getId())) {
             throw new DuplicateResourceException("Campus already exists with name: " + request.getName());
@@ -136,6 +144,8 @@ public class CampusService {
         Campus campus = campusRepository.findByCode(campusCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Campus not found with code: " + campusCode));
 
+        validateCampusAccess(campus);
+        
         campus.setStatus(status);
 
         Campus updatedCampus = campusRepository.save(campus);
@@ -165,5 +175,25 @@ public class CampusService {
         return Base64.getUrlEncoder()
                 .withoutPadding()
                 .encodeToString(randomBytes);
+    }
+
+    private void validateCampusAccess(Campus campus) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        User currentUser = userDetails.getUser();
+
+        if (currentUser.getRole() == Role.SUPER_ADMIN) {
+            return;
+        }
+
+        if (currentUser.getRole() == Role.CAMPUS_ADMIN) {
+            if (currentUser.getCampus() == null || !currentUser.getCampus().getId().equals(campus.getId())) {
+                throw new AccessDeniedException("You are not authorized to access this campus");
+            }
+            return;
+        }
+        throw new AccessDeniedException("You are not authorized to access campus details");
     }
 }

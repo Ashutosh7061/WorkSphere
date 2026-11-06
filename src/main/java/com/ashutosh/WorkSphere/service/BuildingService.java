@@ -65,8 +65,7 @@ public class BuildingService {
             throw new DuplicateResourceException("Building already exists with code: " + code);
         }
 
-        String adminEmail = ("campus." + campus.getCode() + "." + code
-                + "@worksphere.com").toLowerCase();
+        String adminEmail = ("campus." + campus.getCode() + "." + code + "@worksphere.com").toLowerCase();
 
         if (userRepository.existsByEmail(adminEmail)) {
             throw new DuplicateResourceException("User already exists with email: " + adminEmail);
