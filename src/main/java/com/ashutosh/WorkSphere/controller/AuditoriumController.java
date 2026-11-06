@@ -22,7 +22,7 @@ public class AuditoriumController {
     private final AuditoriumService auditoriumService;
 
     @PostMapping("/campuses/{campusCode}/buildings/{buildingCode}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN', 'BUILDING_ADMIN')")
     public ResponseEntity<AuditoriumResponse> createAuditorium(@PathVariable String campusCode, @PathVariable String buildingCode, @Valid @RequestBody AuditoriumCreateRequest request) {
 
         AuditoriumResponse response = auditoriumService.createAuditorium(campusCode, buildingCode, request);
@@ -31,19 +31,19 @@ public class AuditoriumController {
     }
 
     @GetMapping("/{auditoriumCode}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN', 'BUILDING_ADMIN')")
     public ResponseEntity<AuditoriumResponse> getAuditoriumByCode(@PathVariable String auditoriumCode) {
         return ResponseEntity.ok(auditoriumService.getAuditoriumByCode(auditoriumCode));
     }
 
     @GetMapping("/campuses/{campusCode}/buildings/{buildingCode}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN', 'BUILDING_ADMIN')")
     public ResponseEntity<List<AuditoriumResponse>> getAuditoriumsByBuildingCode(@PathVariable String campusCode,@PathVariable String buildingCode) {
         return ResponseEntity.ok(auditoriumService.getAllAuditoriumByBuildingCodeAndFloorNumber(campusCode,buildingCode));
     }
 
     @PutMapping("/{auditoriumCode}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN', 'BUILDING_ADMIN')")
     public ResponseEntity<AuditoriumResponse> updateAuditorium(@PathVariable String auditoriumCode, @Valid @RequestBody AuditoriumUpdateRequest request) {
 
         AuditoriumResponse response = auditoriumService.updateAuditorium(auditoriumCode, request);
@@ -52,7 +52,7 @@ public class AuditoriumController {
     }
 
     @PatchMapping("/{auditoriumCode}/status")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN', 'BUILDING_ADMIN')")
     public ResponseEntity<AuditoriumResponse> updateAuditoriumStatus(@PathVariable String auditoriumCode, @Valid @RequestBody AuditoriumStatusUpdateRequest request) {
 
         AuditoriumResponse response = auditoriumService.updateAuditoriumStatus(auditoriumCode, request);
@@ -61,7 +61,7 @@ public class AuditoriumController {
     }
 
     @GetMapping("/campuses/{campusCode}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN')")
     public ResponseEntity<List<AuditoriumResponse>> getAllAuditoriumByCampus(@PathVariable String campusCode){
         List<AuditoriumResponse> responses =auditoriumService.getAllAuditoriumByCampusCode(campusCode);
 

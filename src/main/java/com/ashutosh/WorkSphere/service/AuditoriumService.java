@@ -4,21 +4,20 @@ import com.ashutosh.WorkSphere.dto.AuditoriumCreateRequest;
 import com.ashutosh.WorkSphere.dto.AuditoriumResponse;
 import com.ashutosh.WorkSphere.dto.AuditoriumStatusUpdateRequest;
 import com.ashutosh.WorkSphere.dto.AuditoriumUpdateRequest;
-import com.ashutosh.WorkSphere.entity.Auditorium;
-import com.ashutosh.WorkSphere.entity.Building;
-import com.ashutosh.WorkSphere.entity.Campus;
-import com.ashutosh.WorkSphere.entity.Floor;
-import com.ashutosh.WorkSphere.enums.AuditoriumStatus;
-import com.ashutosh.WorkSphere.enums.BuildingStatus;
-import com.ashutosh.WorkSphere.enums.CampusStatus;
-import com.ashutosh.WorkSphere.enums.FloorStatus;
+import com.ashutosh.WorkSphere.entity.*;
+import com.ashutosh.WorkSphere.enums.*;
 import com.ashutosh.WorkSphere.exception.DuplicateResourceException;
 import com.ashutosh.WorkSphere.exception.InactiveResourceException;
 import com.ashutosh.WorkSphere.exception.ResourceNotFoundException;
 import com.ashutosh.WorkSphere.repository.AuditoriumRepository;
 import com.ashutosh.WorkSphere.repository.BuildingRepository;
+import com.ashutosh.WorkSphere.repository.CampusRepository;
 import com.ashutosh.WorkSphere.repository.FloorRepository;
+import com.ashutosh.WorkSphere.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,12 +30,15 @@ public class AuditoriumService {
     private final AuditoriumRepository auditoriumRepository;
     private final BuildingRepository buildingRepository;
     private final FloorRepository floorRepository;
+    private final CampusRepository campusRepository;
 
     @Transactional
     public AuditoriumResponse createAuditorium(String campusCode, String buildingCode, AuditoriumCreateRequest request) {
 
         Building building = buildingRepository.findByCodeAndCampus_Code(buildingCode, campusCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Building " + buildingCode + " not found in campus " + campusCode));
+
+        validateBuildingAccess(building);
 
         Floor floor = floorRepository.findByBuilding_CodeAndBuilding_Campus_CodeAndFloorNumber(buildingCode,campusCode, request.getFloorNumber())
                 .orElseThrow(() -> new ResourceNotFoundException("Floor " + request.getFloorNumber() + " not found in building " + buildingCode + " on campus " + campusCode));
@@ -80,6 +82,8 @@ public class AuditoriumService {
         Auditorium auditorium = auditoriumRepository.findByAuditoriumCode(auditoriumCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Auditorium not found with code: " + auditoriumCode));
 
+        validateBuildingAccess(auditorium.getFloor().getBuilding());
+
         auditorium.setStatus(request.getStatus());
 
         Auditorium updatedAuditorium = auditoriumRepository.save(auditorium);
@@ -111,17 +115,24 @@ public class AuditoriumService {
         Auditorium auditorium = auditoriumRepository.findByAuditoriumCode(auditoriumCode)
                 .orElseThrow(()-> new ResourceNotFoundException("Auditorium not found with the give code: "+auditoriumCode));
 
+        validateBuildingAccess(auditorium.getFloor().getBuilding());
+
         return mapToResponse(auditorium);
     }
 
-    public List<AuditoriumResponse> getAllAuditoriumByBuildingCodeAndFloorNumber(String campusCode, String buildingCode){
+    public List<AuditoriumResponse> getAllAuditoriumByBuildingCodeAndFloorNumber(String campusCode, String buildingCode) {
 
-        List<Auditorium> auditorium = auditoriumRepository.findAllByFloor_Building_CodeAndFloor_Building_Campus_Code( buildingCode,campusCode);
+        Building building = buildingRepository.findByCodeAndCampus_Code(buildingCode, campusCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Building " + buildingCode + " not found in campus " + campusCode));
 
-        return auditorium.stream()
+        validateBuildingAccess(building);
+
+        List<Auditorium> auditoriums = auditoriumRepository.findAllByFloor_Building_CodeAndFloor_Building_Campus_Code(
+                buildingCode, campusCode);
+
+        return auditoriums.stream()
                 .map(this::mapToResponse)
                 .toList();
-
     }
 
     @Transactional
@@ -129,6 +140,8 @@ public class AuditoriumService {
 
         Auditorium auditorium = auditoriumRepository.findByAuditoriumCode(auditoriumCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Auditorium not found with code: " + auditoriumCode));
+
+        validateBuildingAccess(auditorium.getFloor().getBuilding());
 
         boolean nameChanged = !auditorium.getAuditoriumName().equalsIgnoreCase(request.getAuditoriumName());
 
@@ -145,8 +158,12 @@ public class AuditoriumService {
 
         return mapToResponse(updatedAuditorium);
     }
+    public List<AuditoriumResponse> getAllAuditoriumByCampusCode(String campusCode) {
 
-    public List<AuditoriumResponse> getAllAuditoriumByCampusCode(String campusCode){
+        Campus campus = campusRepository.findByCode(campusCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Campus not found with code: " + campusCode));
+
+        validateCampusAccess(campus);
 
         return auditoriumRepository.findAllByFloor_Building_Campus_Code(campusCode)
                 .stream()
@@ -182,5 +199,58 @@ public class AuditoriumService {
                 .campusName(campus.getName())
                 .campusCode(campus.getCode())
                 .build();
+    }
+
+    private void validateBuildingAccess(Building building) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new AccessDeniedException("User is not authenticated");
+        }
+        User user = userDetails.getUser();
+
+        // SUPER_ADMIN has global access
+        if (user.getRole() == Role.SUPER_ADMIN) {
+            return;
+        }
+
+        // CAMPUS_ADMIN can access buildings within assigned campus
+        if (user.getRole() == Role.CAMPUS_ADMIN) {
+            if (user.getCampus() != null && user.getCampus().getId().equals(building.getCampus().getId())) {
+                return;
+            }
+        }
+
+        // BUILDING_ADMIN can access only assigned building
+        if (user.getRole() == Role.BUILDING_ADMIN) {
+
+            if (user.getBuilding() != null && user.getBuilding().getId().equals(building.getId()) &&
+                    user.getCampus() != null && user.getCampus().getId().equals(building.getCampus().getId()))
+            {
+                return;
+            }
+        }
+        throw new AccessDeniedException("You are not authorized to access this building");
+    }
+
+    private void validateCampusAccess(Campus campus) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new AccessDeniedException("Unauthorized access");
+        }
+
+        User user = userDetails.getUser();
+
+        if (user.getRole() == Role.SUPER_ADMIN) {
+            return;
+        }
+
+        if (user.getRole() == Role.CAMPUS_ADMIN && user.getCampus() != null && user.getCampus().getId().equals(campus.getId())) {
+            return;
+        }
+        throw new AccessDeniedException("You do not have permission to access this campus");
     }
 }
