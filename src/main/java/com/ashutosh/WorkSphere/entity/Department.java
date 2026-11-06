@@ -1,5 +1,6 @@
 package com.ashutosh.WorkSphere.entity;
 
+import com.ashutosh.WorkSphere.enums.DepartmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,12 +11,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Table(name = "departments",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        columnNames = {"name", "company_id"}
-                )
-        }
-)
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "campus_id"}),
+                @UniqueConstraint(columnNames = {"department_code", "campus_id"}),
+                @UniqueConstraint(columnNames = {"generated_code"})})
 public class Department {
 
     @Id
@@ -25,8 +23,19 @@ public class Department {
     @Column(nullable = false)
     private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
+    @Column(name = "department_code", nullable = false, length = 20)
+    private String departmentCode;
 
+    @Column(name = "generated_code", nullable = false, unique = true, length = 40)
+    private String generatedCode;
+
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private DepartmentStatus status;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "campus_id", nullable = false)
+    private Campus campus;
 }
