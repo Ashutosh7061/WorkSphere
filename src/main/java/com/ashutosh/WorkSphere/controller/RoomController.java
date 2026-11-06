@@ -22,32 +22,32 @@ public class RoomController {
     private final RoomService roomService;
 
     @PostMapping("/campuses/{campusCode}/buildings/{buildingCode}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN', 'BUILDING_ADMIN')")
     public ResponseEntity<RoomResponse> createRoom(@PathVariable String campusCode, @PathVariable String buildingCode, @Valid @RequestBody RoomCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(roomService.createRoom(campusCode, buildingCode,request));
     }
 
     @GetMapping("/{roomCode}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN', 'BUILDING_ADMIN')")
     public ResponseEntity<RoomResponse> getRoomByCode(@PathVariable String roomCode) {
         return ResponseEntity.ok(roomService.getRoomByCode(roomCode));
     }
 
     @GetMapping("/campuses/{campusCode}/buildings/{buildingCode}/floors/{floorNumber}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN', 'BUILDING_ADMIN')")
     public ResponseEntity<List<RoomResponse>> getRoomsByFloor(@PathVariable String campusCode, @PathVariable String buildingCode, @PathVariable Integer floorNumber) {
 
         return ResponseEntity.ok(roomService.getRoomsByFloor(campusCode, buildingCode, floorNumber));
     }
 
     @PatchMapping("/{roomCode}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN', 'BUILDING_ADMIN')")
     public ResponseEntity<RoomResponse> updateRoomDetails(@PathVariable String roomCode, @Valid @RequestBody RoomUpdateRequest request) {
         return ResponseEntity.ok(roomService.updateRoomDetails(roomCode, request));
     }
 
     @PatchMapping("/{roomCode}/status")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN', 'BUILDING_ADMIN')")
     public ResponseEntity<RoomResponse> updateRoomStatus(@PathVariable String roomCode, @RequestParam RoomStatus status) {
         return ResponseEntity.ok(roomService.updateRoomStatus(roomCode, status));
     }

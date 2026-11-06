@@ -13,12 +13,19 @@ import com.ashutosh.WorkSphere.enums.FloorStatus;
 import com.ashutosh.WorkSphere.enums.RoomStatus;
 import com.ashutosh.WorkSphere.exception.InactiveResourceException;
 import com.ashutosh.WorkSphere.exception.ResourceNotFoundException;
-import com.ashutosh.WorkSphere.repository.BuildingRepository;
 import com.ashutosh.WorkSphere.repository.FloorRepository;
 import com.ashutosh.WorkSphere.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+
+import com.ashutosh.WorkSphere.entity.User;
+import com.ashutosh.WorkSphere.enums.Role;
+import com.ashutosh.WorkSphere.security.CustomUserDetails;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 
 import java.util.List;
@@ -28,7 +35,6 @@ import java.util.List;
 public class RoomService {
 
     private final RoomRepository roomRepository;
-    private final BuildingRepository buildingRepository;
     private final FloorRepository floorRepository;
 
     @Transactional
@@ -36,6 +42,8 @@ public class RoomService {
 
         Floor floor = floorRepository.findByBuilding_CodeAndBuilding_Campus_CodeAndFloorNumber(buildingCode,campusCode, request.getFloorNumber())
                 .orElseThrow(() -> new ResourceNotFoundException("Floor " + request.getFloorNumber() + " not found in building: " + buildingCode + " on campus: " + campusCode));
+
+        validateBuildingAccess(floor.getBuilding());
 
         Campus campus = floor.getBuilding().getCampus();
         if(campus.getStatus() == CampusStatus.INACTIVE){
@@ -80,23 +88,33 @@ public class RoomService {
         Room room = roomRepository.findByRoomCode(roomCode)
                 .orElseThrow(()-> new ResourceNotFoundException("Room not found with code: "+roomCode));
 
+        validateBuildingAccess(room.getFloor().getBuilding());
+
         return mapToResponse(room);
     }
 
     public List<RoomResponse> getRoomsByFloor(String campusCode, String buildingCode, Integer floorNumber) {
 
-        List<Room> rooms = roomRepository.findByFloorBuildingCodeAndFloorBuildingCampusCodeAndFloorFloorNumber(buildingCode,campusCode, floorNumber);
+        Floor floor = floorRepository
+                .findByBuilding_CodeAndBuilding_Campus_CodeAndFloorNumber(buildingCode, campusCode, floorNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Floor " + floorNumber + " not found in building: " + buildingCode + " on campus: " + campusCode));
+
+        validateBuildingAccess(floor.getBuilding());
+
+        List<Room> rooms = roomRepository
+                .findByFloorBuildingCodeAndFloorBuildingCampusCodeAndFloorFloorNumber(buildingCode, campusCode, floorNumber);
 
         return rooms.stream()
                 .map(this::mapToResponse)
                 .toList();
-
     }
 
     @Transactional
     public RoomResponse updateRoomDetails(String roomCode, RoomUpdateRequest request){
         Room room = roomRepository.findByRoomCode(roomCode)
                 .orElseThrow(()-> new ResourceNotFoundException("Room not found with code: "+ roomCode));
+
+        validateBuildingAccess(room.getFloor().getBuilding());
 
         room.setRoomName(request.getRoomName());
         room.setRoomType(request.getRoomType());
@@ -112,6 +130,8 @@ public class RoomService {
 
         Room room = roomRepository.findByRoomCode(roomCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found with code: " + roomCode));
+
+        validateBuildingAccess(room.getFloor().getBuilding());
 
         room.setStatus(status);
         Room updatedRoom = roomRepository.save(room);
@@ -138,5 +158,38 @@ public class RoomService {
                 .campusName(campus.getName())
                 .campusCode(campus.getCode())
                 .build();
+    }
+
+    private void validateBuildingAccess(Building building) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new AccessDeniedException("User is not authenticated");
+        }
+        User user = userDetails.getUser();
+
+        // SUPER_ADMIN has global access
+        if (user.getRole() == Role.SUPER_ADMIN) {
+            return;
+        }
+
+        // CAMPUS_ADMIN can access buildings within assigned campus
+        if (user.getRole() == Role.CAMPUS_ADMIN) {
+            if (user.getCampus() != null && user.getCampus().getId().equals(building.getCampus().getId())) {
+                return;
+            }
+        }
+
+        // BUILDING_ADMIN can access only assigned building
+        if (user.getRole() == Role.BUILDING_ADMIN) {
+
+            if (user.getBuilding() != null && user.getBuilding().getId().equals(building.getId()) &&
+                    user.getCampus() != null && user.getCampus().getId().equals(building.getCampus().getId()))
+            {
+                return;
+            }
+        }
+        throw new AccessDeniedException("You are not authorized to access this building");
     }
 }
