@@ -36,7 +36,7 @@ public class CompanyBasedController {
     }
 
     @GetMapping("/campuses/{campusCode}/floors")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'CAMPUS_ADMIN')")
     public ResponseEntity<List<FloorResponse>> getFloorsByCampusCode(@PathVariable String campusCode) {
 
         return ResponseEntity.ok(floorService.getFloorsByCampusCode(campusCode));

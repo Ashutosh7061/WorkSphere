@@ -15,6 +15,4 @@ public class FloorCreateRequest {
 
     private String name;
 
-    @NotNull(message = "Building ID is required")
-    private Long buildingId;
 }

@@ -4,16 +4,22 @@ import com.ashutosh.WorkSphere.dto.*;
 import com.ashutosh.WorkSphere.entity.Building;
 import com.ashutosh.WorkSphere.entity.Campus;
 import com.ashutosh.WorkSphere.entity.Floor;
+import com.ashutosh.WorkSphere.entity.User;
 import com.ashutosh.WorkSphere.enums.BuildingStatus;
 import com.ashutosh.WorkSphere.enums.CampusStatus;
 import com.ashutosh.WorkSphere.enums.FloorStatus;
+import com.ashutosh.WorkSphere.enums.Role;
 import com.ashutosh.WorkSphere.exception.DuplicateResourceException;
 import com.ashutosh.WorkSphere.exception.InactiveResourceException;
 import com.ashutosh.WorkSphere.exception.ResourceNotFoundException;
 import com.ashutosh.WorkSphere.repository.BuildingRepository;
 import com.ashutosh.WorkSphere.repository.CampusRepository;
 import com.ashutosh.WorkSphere.repository.FloorRepository;
+import com.ashutosh.WorkSphere.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +36,7 @@ public class FloorService {
 
         Building building = findBuilding(campusCode, buildingCode);
 
+        validateBuildingAccess(building);
 
         if (building.getStatus() == BuildingStatus.INACTIVE) {
             throw new InactiveResourceException("Cannot create floor under an inactive building");
@@ -59,6 +66,9 @@ public class FloorService {
     public FloorDetailResponse getFloorById(String campusCode, String buildingCode, Integer floorNumber) {
 
         Floor floor = findFloor(campusCode, buildingCode, floorNumber);
+
+        validateBuildingAccess(floor.getBuilding());
+
         Building building = floor.getBuilding();
         Campus campus = building.getCampus();
 
@@ -74,10 +84,11 @@ public class FloorService {
                 .build();
     }
 
-    public FloorUpdateResponse updateFloor(String campusCode, String buildingCode,
-                                           Integer floorNumber, FloorUpdateRequest request) {
+    public FloorUpdateResponse updateFloor(String campusCode, String buildingCode, Integer floorNumber, FloorUpdateRequest request) {
 
         Floor floor = findFloor(campusCode, buildingCode,floorNumber);
+
+        validateBuildingAccess(floor.getBuilding());
 
         String oldName = floor.getName();
 
@@ -93,10 +104,11 @@ public class FloorService {
                 .build();
     }
 
-    public FloorResponse updateFloorStatus(String campusCode, String buildingCode,
-                                           Integer floorNumber, FloorStatus status) {
+    public FloorResponse updateFloorStatus(String campusCode, String buildingCode, Integer floorNumber, FloorStatus status) {
 
         Floor floor = findFloor(campusCode,buildingCode,floorNumber);
+
+        validateBuildingAccess(floor.getBuilding());
 
         floor.setStatus(status);
 
@@ -105,11 +117,15 @@ public class FloorService {
         return mapToResponse(updatedFloor);
     }
 
-    public List<FloorResponse> getFloorsByBuildingId(String campusCode, String buildingCode) {
+    public List<FloorResponse> getFloorsByBuildingId(
+            String campusCode, String buildingCode) {
 
-        findBuilding(campusCode, buildingCode);
+        Building building = findBuilding(campusCode, buildingCode);
 
-        return floorRepository.findAllByBuilding_CodeAndBuilding_Campus_Code(buildingCode,campusCode)
+        validateBuildingAccess(building);
+
+        return floorRepository
+                .findAllByBuilding_CodeAndBuilding_Campus_Code(buildingCode, campusCode)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -117,7 +133,14 @@ public class FloorService {
 
     public List<FloorResponse> getFloorsByCampusCode(String campusCode) {
 
-        campusRepository.findByCode(campusCode).orElseThrow(() -> new ResourceNotFoundException("Campus not found with code: " + campusCode));
+        Campus campus = campusRepository.findByCode(campusCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Campus not found with code: " + campusCode));
+
+        if (campus.getStatus() == CampusStatus.INACTIVE) {
+            throw new InactiveResourceException("Cannot retrieve floors from an inactive campus");
+        }
+
+        validateCampusAccess(campus);
 
         return floorRepository.findAllByBuilding_Campus_Code(campusCode)
                 .stream()
@@ -155,5 +178,64 @@ public class FloorService {
                 .buildingId(floor.getBuilding().getId())
                 .buildingName(floor.getBuilding().getName())
                 .build();
+    }
+
+    private void validateBuildingAccess(Building building) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        User currentUser = userDetails.getUser();
+
+        // SUPER_ADMIN has unrestricted access
+        if (currentUser.getRole() == Role.SUPER_ADMIN) {
+            return;
+        }
+
+        // CAMPUS_ADMIN can access buildings within their assigned campus
+        if (currentUser.getRole() == Role.CAMPUS_ADMIN) {
+            if (currentUser.getCampus() == null || !currentUser.getCampus().getId().equals(building.getCampus().getId())) {
+                throw new AccessDeniedException("You are not authorized to access this campus");
+            }
+            return;
+        }
+
+        // BUILDING_ADMIN can access only their assigned building
+        if (currentUser.getRole() == Role.BUILDING_ADMIN) {
+            if (currentUser.getBuilding() == null || !currentUser.getBuilding().getId().equals(building.getId()) ||
+                    currentUser.getCampus() == null || !currentUser.getCampus().getId().equals(building.getCampus().getId()))
+            {
+                throw new AccessDeniedException("You are not authorized to access this building");
+            }
+            return;
+        }
+        throw new AccessDeniedException("You are not authorized to perform this operation");
+    }
+
+    private void validateCampusAccess(Campus campus) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new AccessDeniedException("User is not authenticated");
+        }
+
+        User user = userDetails.getUser();
+
+        // SUPER_ADMIN has global access
+        if (user.getRole() == Role.SUPER_ADMIN) {
+            return;
+        }
+        // CAMPUS_ADMIN can access only their assigned campus
+        if (user.getRole() == Role.CAMPUS_ADMIN) {
+            if (user.getCampus() == null) {
+                throw new AccessDeniedException("No campus assigned to this user");
+            }
+
+            if (user.getCampus().getId().equals(campus.getId())) {
+                return;
+            }
+        }
+        throw new AccessDeniedException("You are not authorized to access campus: " + campus.getCode());
     }
 }

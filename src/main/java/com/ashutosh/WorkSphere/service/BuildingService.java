@@ -90,6 +90,7 @@ public class BuildingService {
                 .role(Role.BUILDING_ADMIN)
                 .accountStatus(AccountStatus.ACTIVE)
                 .passwordChangeRequired(true)
+                .campus(savedBuilding.getCampus())
                 .building(savedBuilding)
                 .build();
 
