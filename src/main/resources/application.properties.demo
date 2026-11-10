@@ -15,3 +15,5 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 
 jwt.secret=YOUR_LONG_RANDOM_SECRET_KEY
 jwt.expiration=3600000
+
+spring.jpa.properties.org.hibernate.envers.global_with_modified_flag=true

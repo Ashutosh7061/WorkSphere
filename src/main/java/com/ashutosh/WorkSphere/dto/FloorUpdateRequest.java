@@ -1,6 +1,6 @@
 package com.ashutosh.WorkSphere.dto;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Getter
@@ -10,6 +10,6 @@ import lombok.*;
 @Builder
 public class FloorUpdateRequest {
 
-    @NotNull(message = "Floor name is required")
+    @NotBlank(message = "Floor name is required")
     private String name;
 }
